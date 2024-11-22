@@ -1,5 +1,4 @@
-import sys
-from pprint import pprint
+import json
 from lark import Lark, Transformer, v_args, tree
 
 G = r'''
@@ -66,6 +65,9 @@ alo??
 '''.strip()
 
 variables = dict()  # словарь для хранения констант
+json_output = []  # список для хранения результата
+inside_dict = False  # флаг, указывающий, находимся ли мы внутри словаря
+
 @v_args(inline=True)
 class Tree(Transformer):
     NAME = str
@@ -73,53 +75,51 @@ class Tree(Transformer):
 
     def STR(self, x):
         return x[1:-1]
-
     def assign(self, k, v):
-        print(k, '=', v)
-        variables[k] = v
+        if not inside_dict:  # Проверяем, не находимся ли мы внутри словаря
+            variables[k] = v
+            typ = type(v)
+            json_output.append({"type": typ, "name": k, "value": v})
         return (k, v)
 
     def const(self, k, v):
-        print(k, '=', v)
-        variables[k] = v
+        if not inside_dict:  # Проверяем, не находимся ли мы внутри словаря
+            variables[k] = v
+            typ = type(v)
+            json_output.append({"type": typ, "name": k, "value": v})
         return (k, v)
 
     def dict(self, name, *assigns):
-        print(name)
+        global inside_dict
+        inside_dict = True
         variables[name] = assigns
+        json_output.append({"type": "dict", "name": name, "values": ""})
+        for assign in assigns:
+            json_output[len(json_output)-1]["values"] += (Tree(assign))
+        inside_dict = False
         return ('dict', list(assigns))
 
     def addition(self, name, v):
         variables[name] += v
+        json_output.append({"type": "addition", "name": name, "new_value": variables[name]})
         return (name, variables[name])
 
     def subtraction(self, name, v):
         variables[name] -= v
+        json_output.append({"type": "subtraction", "name": name, "new_value": variables[name]})
         return (name, variables[name])
 
     def multiplication(self, name, v):
         variables[name] *= v
+        json_output.append({"type": "multiplication", "name": name, "new_value": variables[name]})
         return (name, variables[name])
 
     def max(self, a, b):
         c = max(variables[a], variables[b])
+        json_output.append({"type": "max", a: variables[a], b: variables[b], "result": c})
         return ('max', a, b)
 
-
-'''def execute(tree):
-    match tree:
-        case ('max', a, b):
-            print('Maximum between', a, 'and', b, '=', max(a, b))
-        case (name, value):  # любое присваивание
-            print(name, "=", value)
-        case ('dict', dictionary):
-            # print(name, '=')
-            for assign in dictionary:
-                execute(assign)'''
-
-
-parser = Lark(G, parser="lalr", transformer=Tree())
+parser = Lark(G, parser="lalr", transformer=Tree(), start='start')
 parser.parse(src)
-print(variables)
-#print(parser.parse(src).pretty())
-#execute(parser.parse(src))
+json_result = json.dumps(json_output, indent=4, ensure_ascii=False)
+print(json_result)
