@@ -21,13 +21,11 @@ subtraction: "$(-" NAME [" "] val ")"
 
 multiplication: "$(*" NAME [" "] val ")"
 
-variable: const | assign
-
 max: "max" "(" NAME [", "] NAME ")"
 
-dict: NAME "([" [assign ("," assign)*] "]" ")"
+dict: NAME "([" [assign ("," [assign | dict])*] "]" ")"
 
-start: (dict | variable | addition | subtraction | multiplication | max)* -> obj
+start: (dict | const | assign | addition | subtraction | multiplication | max)* 
 '''
 
 src = '''
@@ -44,7 +42,7 @@ first: "privet";
 table([
     a = 1,
     basdf_ = "hello", 
-    c_fsdaf = dict([
+    dict([
         hello = "hi"
     ])
 ])
@@ -66,8 +64,6 @@ alo??
 
 variables = dict()  # словарь для хранения констант
 json_output = []  # список для хранения результата
-inside_dict = False  # флаг, указывающий, находимся ли мы внутри словаря
-
 @v_args(inline=True)
 class Tree(Transformer):
     NAME = str
@@ -76,50 +72,94 @@ class Tree(Transformer):
     def STR(self, x):
         return x[1:-1]
     def assign(self, k, v):
-        if not inside_dict:  # Проверяем, не находимся ли мы внутри словаря
-            variables[k] = v
-            typ = type(v)
-            json_output.append({"type": typ, "name": k, "value": v})
         return (k, v)
 
     def const(self, k, v):
-        if not inside_dict:  # Проверяем, не находимся ли мы внутри словаря
-            variables[k] = v
-            typ = type(v)
-            json_output.append({"type": typ, "name": k, "value": v})
         return (k, v)
 
     def dict(self, name, *assigns):
-        global inside_dict
-        inside_dict = True
-        variables[name] = assigns
-        json_output.append({"type": "dict", "name": name, "values": ""})
-        for assign in assigns:
-            json_output[len(json_output)-1]["values"] += (Tree(assign))
-        inside_dict = False
-        return ('dict', list(assigns))
+        return ('dict', name, list(assigns))
 
     def addition(self, name, v):
-        variables[name] += v
-        json_output.append({"type": "addition", "name": name, "new_value": variables[name]})
-        return (name, variables[name])
+        return (name, v)
 
     def subtraction(self, name, v):
-        variables[name] -= v
-        json_output.append({"type": "subtraction", "name": name, "new_value": variables[name]})
-        return (name, variables[name])
+        return (name, v)
 
     def multiplication(self, name, v):
-        variables[name] *= v
-        json_output.append({"type": "multiplication", "name": name, "new_value": variables[name]})
-        return (name, variables[name])
+        return (name, v)
 
     def max(self, a, b):
-        c = max(variables[a], variables[b])
-        json_output.append({"type": "max", a: variables[a], b: variables[b], "result": c})
         return ('max', a, b)
 
+def execute(tree, inside_dict):
+    match tree:
+        case (k, v):
+            typ = type(v).__name__
+            if not inside_dict:  # Проверяем, не находимся ли мы внутри словаря
+                variables[k] = v
+                json_output.append({"type": typ, "name": k, "value": v})
+                return {}
+            else:
+                return {"type": typ, "name": k, "value": v}
+
+        case ('dict', name, assigns):
+            if not inside_dict:
+                variables[name] = assigns
+                json_output.append({"type": "dict", "name": name, "values": []})
+                for assign in assigns:
+                    d = execute(assign, True)
+                    json_output[len(json_output) - 1]["values"].append(d)
+                return {}
+            else:
+                variables[name] = assigns
+                out = {"type": "dict", "name": name, "values": []}
+                for assign in assigns:
+                    d = execute(assign, True)
+                    out["values"].append(d)
+                return out
+
+        case ('addition', name, v):
+            if not inside_dict:
+                variables[name] += v
+                json_output.append({"type": "addition", "name": name, "new_value": variables[name]})
+                return {}
+            else:  # пока что по сути переписываю логику в else, тк ещё не ясно, нужен ли он будет вообще. А так нагляднее и удобнее для изменений
+                variables[name] += v
+                return {"type": "addition", "name": name, "new_value": variables[name]}
+
+        case ('subtraction', name, v):
+            if not inside_dict:
+                variables[name] -= v
+                json_output.append({"type": "subtraction", "name": name, "new_value": variables[name]})
+            else:
+                variables[name] -= v
+                return {"type": "subtraction", "name": name, "new_value": variables[name]}
+
+        case ('multiplication', name, v):
+            if not inside_dict:
+                variables[name] *= v
+                json_output.append({"type": "multiplication", "name": name, "new_value": variables[name]})
+            else:
+                variables[name] *= v
+                return {"type": "multiplication", "name": name, "new_value": variables[name]}
+
+        case ('max', a, b):
+            if not inside_dict:
+                print(variables)
+                c = max(variables[a], variables[b])
+                json_output.append({"type": "max", a: variables[a], b: variables[b], "result": c})
+            else:
+                c = max(variables[a], variables[b])
+                return {"type": "max", a: variables[a], b: variables[b], "result": c}
+
+
 parser = Lark(G, parser="lalr", transformer=Tree(), start='start')
-parser.parse(src)
+tree = parser.parse(src)
+print(tree)
+# Запускаем execute для каждого узла дерева
+for node in tree.children:
+    execute(node, False)
+# Сериализация в JSON
 json_result = json.dumps(json_output, indent=4, ensure_ascii=False)
 print(json_result)
