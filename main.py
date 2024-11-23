@@ -1,5 +1,5 @@
 import json
-from lark import Lark, Transformer, v_args, tree
+from lark import Lark, Transformer, v_args, tree, LarkError, exceptions
 
 G = r'''
 NUM: /[0-9]+/
@@ -81,13 +81,13 @@ class Tree(Transformer):
         return ('dict', name, list(assigns))
 
     def addition(self, name, v):
-        return (name, v)
+        return ('addition', name, v)
 
     def subtraction(self, name, v):
-        return (name, v)
+        return ('subtraction', name, v)
 
     def multiplication(self, name, v):
-        return (name, v)
+        return ('multiplication', name, v)
 
     def max(self, a, b):
         return ('max', a, b)
@@ -95,6 +95,8 @@ class Tree(Transformer):
 def execute(tree, inside_dict):
     match tree:
         case (k, v):
+            if (k in variables):
+                raise LarkError(f"Константа {k} уже существует!")
             typ = type(v).__name__
             if not inside_dict:  # Проверяем, не находимся ли мы внутри словаря
                 variables[k] = v
@@ -104,6 +106,8 @@ def execute(tree, inside_dict):
                 return {"type": typ, "name": k, "value": v}
 
         case ('dict', name, assigns):
+            if (name in variables):
+                raise LarkError(f"Словарь {name} уже существует!")
             if not inside_dict:
                 variables[name] = assigns
                 json_output.append({"type": "dict", "name": name, "values": []})
@@ -153,11 +157,16 @@ def execute(tree, inside_dict):
                 return {"type": "max", a: variables[a], b: variables[b], "result": c}
 
 
-parser = Lark(G, parser="lalr", transformer=Tree(), start='start')
-tree = parser.parse(src)
-# Запускаем execute для каждого узла дерева
-for node in tree.children:
-    execute(node, False)
-# Сериализация в JSON
-json_result = json.dumps(json_output, indent=4, ensure_ascii=False)
-print(json_result)
+try:
+    parser = Lark(G, parser="lalr", transformer=Tree(), start='start')
+    tree = parser.parse(src)
+    # Запускаем execute для каждого узла дерева
+    for node in tree.children:
+        execute(node, False)
+    # Сериализация в JSON
+    json_result = json.dumps(json_output, indent=4, ensure_ascii=False)
+    print(json_result)
+except exceptions.UnexpectedCharacters as uc:
+        print(f"Синтаксическая ошибка:\n{str(uc)}")
+except exceptions.LarkError as le:
+        print(f"Ошибка при обработке исходной программы:\n{str(le)}")
