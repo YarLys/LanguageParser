@@ -146,7 +146,6 @@ def execute(tree, inside_dict):
 
         case ('max', a, b):
             if not inside_dict:
-                print(variables)
                 c = max(variables[a], variables[b])
                 json_output.append({"type": "max", a: variables[a], b: variables[b], "result": c})
             else:
@@ -156,7 +155,6 @@ def execute(tree, inside_dict):
 
 parser = Lark(G, parser="lalr", transformer=Tree(), start='start')
 tree = parser.parse(src)
-print(tree)
 # Запускаем execute для каждого узла дерева
 for node in tree.children:
     execute(node, False)
