@@ -1,4 +1,6 @@
 import json
+import sys
+
 from lark import Lark, Transformer, v_args, tree, LarkError, exceptions
 
 G = r'''
@@ -28,42 +30,6 @@ dict: NAME "([" [assign ("," [assign | dict])*] "]" ")"
 start: (dict | const | assign | addition | subtraction | multiplication | max)* 
 '''
 
-src = '''
-REM TEST PROGRAM
-
-<#vm = {
-    ar = [1 2 3]
-}
-r = "MIREA"
-#>
-
-first: "privet";
-
-table([
-    a = 1,
-    basdf_ = "hello", 
-    dict([
-        hello = "hi"
-    ])
-])
-
-constant: 213;
-const: 500;
-
-$(+ constant 4)
-
-max(constant, const)
-
-$(* constant 5)
-
-<#
-alo
-alo??
-#>
-'''.strip()
-
-variables = dict()  # словарь для хранения констант
-json_output = []  # список для хранения результата
 @v_args(inline=True)
 class Tree(Transformer):
     NAME = str
@@ -92,7 +58,7 @@ class Tree(Transformer):
     def max(self, a, b):
         return ('max', a, b)
 
-def execute(tree, inside_dict):
+def execute(tree, inside_dict, json_output, variables):
     match tree:
         case (k, v):
             if (k in variables):
@@ -112,14 +78,14 @@ def execute(tree, inside_dict):
                 variables[name] = assigns
                 json_output.append({"type": "dict", "name": name, "values": []})
                 for assign in assigns:
-                    d = execute(assign, True)
+                    d = execute(assign, True, json_output, variables)
                     json_output[len(json_output) - 1]["values"].append(d)
                 return {}
             else:
                 variables[name] = assigns
                 out = {"type": "dict", "name": name, "values": []}
                 for assign in assigns:
-                    d = execute(assign, True)
+                    d = execute(assign, True, json_output, variables)
                     out["values"].append(d)
                 return out
 
@@ -157,16 +123,25 @@ def execute(tree, inside_dict):
                 return {"type": "max", a: variables[a], b: variables[b], "result": c}
 
 
-try:
-    parser = Lark(G, parser="lalr", transformer=Tree(), start='start')
-    tree = parser.parse(src)
-    # Запускаем execute для каждого узла дерева
-    for node in tree.children:
-        execute(node, False)
-    # Сериализация в JSON
-    json_result = json.dumps(json_output, indent=4, ensure_ascii=False)
-    print(json_result)
-except exceptions.UnexpectedCharacters as uc:
-        print(f"Синтаксическая ошибка:\n{str(uc)}")
-except exceptions.LarkError as le:
-        print(f"Ошибка при обработке исходной программы:\n{str(le)}")
+def parse(src):
+    try:
+        parser = Lark(G, parser="lalr", transformer=Tree(), start='start')
+        tree = parser.parse(src)
+        # Запускаем execute для каждого узла дерева
+        variables = dict()  # словарь для хранения констант
+        json_output = [] # Список для хранения результата
+        for node in tree.children:
+            execute(node, False, json_output, variables)
+        # Сериализация в JSON
+        json_result = json.dumps(json_output, indent=4, ensure_ascii=False)
+        return json_result
+    except exceptions.UnexpectedCharacters as uc:
+        return f"Синтаксическая ошибка:\n{str(uc)}"
+    except exceptions.LarkError as le:
+        return f"Ошибка при обработке исходной программы:\n{str(le)}"
+
+
+if __name__ == "__main__":
+    src = sys.stdin.read()
+    output = parse(src.strip())
+    print(output)
