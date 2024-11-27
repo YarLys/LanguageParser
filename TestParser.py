@@ -10,7 +10,7 @@ class TestParser(unittest.TestCase):
                 комментарий#>
                 REM Всем пока!
                 '''.strip()
-        expected = '''[]'''
+        expected = '''{}S'''
         self.assertEqual(parse(src).strip().split(), expected.strip().split())
 
     def test_constants(self):
@@ -20,23 +20,11 @@ class TestParser(unittest.TestCase):
             third: "bye bye";
             '''.strip()
         expected = '''
-            [
-                {
-                    "type": "str",
-                    "name": "first_const",
-                    "value": "hello world"
-                },
-                {
-                    "type": "int",
-                    "name": "second",
-                    "value": 500
-                },
-                {
-                    "type": "str",
-                    "name": "third",
-                    "value": "bye bye"
-                }
-            ]
+            {
+                "first_const": "hello world",
+                "second": 500,
+                "third": "bye bye"
+            }
         '''
         self.assertEqual(parse(src).strip().split(), expected.strip().split())
 
@@ -48,28 +36,10 @@ class TestParser(unittest.TestCase):
             $(- b 7000)
         '''.strip()
         expected = '''
-            [
-                {
-                    "type": "int",
-                    "name": "a",
-                    "value": 100
-                },
-                {
-                    "type": "int",
-                    "name": "b",
-                    "value": 7435
-                },
-                {
-                    "type": "addition",
-                    "name": "a",
-                    "new_value": 150
-                },
-                {
-                    "type": "subtraction",
-                    "name": "b",
-                    "new_value": 435
-                }
-            ]
+            {
+                "a": 150,
+                "b": 435
+            }
         '''
         self.assertEqual(parse(src).strip().split(), expected.strip().split())
 
@@ -77,27 +47,14 @@ class TestParser(unittest.TestCase):
         src = '''
             a: 100;
             b: 7435;
-            max(a, b)
+            c: max(a, b);
         '''.strip()
         expected = '''
-            [
-                {
-                    "type": "int",
-                    "name": "a",
-                    "value": 100
-                },
-                {
-                    "type": "int",
-                    "name": "b",
-                    "value": 7435
-                },
-                {
-                    "type": "max",
-                    "a": 100,
-                    "b": 7435,
-                    "result": 7435
-                }
-            ]
+            {
+                "a": 100,
+                "b": 7435,
+                "c": 7435
+            }
         '''
         self.assertEqual(parse(src).strip().split(), expected.strip().split())
 
@@ -113,40 +70,26 @@ class TestParser(unittest.TestCase):
             ])
         '''.strip()
         expected = '''
-        [
-            {
-                "type": "dict",
-                "name": "slovar",
-                "values": [
-                    {
-                        "type": "str",
-                        "name": "privet",
-                        "value": "hello"
-                    },
-                    {
-                        "type": "int",
-                        "name": "num",
-                        "value": 100
-                    },
-                    {
-                        "type": "dict",
-                        "name": "dict_inside",
-                        "values": [
-                            {
-                                "type": "str",
-                                "name": "mir",
-                                "value": "world"
-                            },
-                            {
-                                "type": "int",
-                                "name": "test",
-                                "value": 123
-                            }
-                        ]
-                    }
-                ]
-            }
-        ]
+        {
+            "slovar": [
+                {
+                    "privet": "hello"
+                },
+                {
+                    "num": 100
+                },
+                {
+                    "dict_inside": [
+                        {
+                            "mir": "world"
+                        },
+                        {
+                            "test": 123
+                        }
+                    ]
+                }
+            ]
+        }
         '''
         self.assertEqual(parse(src).strip().split(), expected.strip().split())
 
@@ -174,7 +117,7 @@ class TestParser(unittest.TestCase):
         
         $(+ constant 4)
         
-        max(constant, const)
+        maxi: max(constant, const);
         
         $(* constant 5)
         
@@ -184,66 +127,27 @@ class TestParser(unittest.TestCase):
         #>
         '''.strip()
         expected = '''
-        [
         {
-            "type": "str",
-            "name": "first",
-            "value": "privet"
-        },
-        {
-            "type": "dict",
-            "name": "table",
-            "values": [
+            "first": "privet",
+            "table": [
                 {
-                    "type": "int",
-                    "name": "a",
-                    "value": 1
+                    "a": 1
                 },
                 {
-                    "type": "str",
-                    "name": "basdf_",
-                    "value": "hello"
+                    "basdf_": "hello"
                 },
                 {
-                    "type": "dict",
-                    "name": "dict",
-                    "values": [
+                    "dict": [
                         {
-                            "type": "str",
-                            "name": "hello",
-                            "value": "hi"
+                            "hello": "hi"
                         }
                     ]
                 }
-            ]
-        },
-        {
-            "type": "int",
-            "name": "constant",
-            "value": 213
-        },
-        {
-            "type": "int",
-            "name": "const",
-            "value": 500
-        },
-        {
-            "type": "addition",
-            "name": "constant",
-            "new_value": 217
-        },
-        {
-            "type": "max",
-            "constant": 217,
+            ],
+            "constant": 1085,
             "const": 500,
-            "result": 500
-        },
-        {
-            "type": "multiplication",
-            "name": "constant",
-            "new_value": 1085
+            "maxi": 500
         }
-        ]
         '''
         self.assertEqual(parse(src).strip().split(), expected.strip().split())
 
