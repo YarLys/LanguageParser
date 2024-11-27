@@ -70,17 +70,11 @@ $(+ имя 1)
   ```
 #### Результат работы программы:
   ```
-  [
-    {
-        "a": 40
-    },
-    {
-        "b": 20
-    },
-    {
-        "c": 40
-    }
-  ]
+  {
+    "a": 40,
+    "b": 20,
+    "c": 40
+  }
   ```
 ### Пример 2
 #### Код, поступающий на вход программы:
@@ -97,28 +91,27 @@ $(+ имя 1)
   ```
 #### Результат работы программы:
   ```
-  [
-    {
-      "slovar": [
-      {
-        "privet": "hello"
-      },
-      {
-        "num": 100
-      },
-      {
-        "dict_inside": [
-          {
-            "mir": "world"
-          },
-          {
-            "test": 123
-          }
-        ]
-      }
-      ]
-    }
-  ]
+  {
+    "slovar": [
+        {
+            "privet": "hello"
+        },
+        {
+            "num": 100
+        },
+        {
+            "dict_inside": [
+                {
+                    "mir": "world"
+                },
+                {
+                    "test": 123
+                }
+            ]
+        }
+    ]
+}
+
   ```
 ### Пример 3
 #### Код, поступающий на вход программы:
@@ -129,28 +122,20 @@ $(+ имя 1)
   ```
 #### Результат работы программы:
   ```
-  [
-        {
-            "first_const": "hello world"
-        },
-        {
-            "second": 500
-        },
-        {
-            "third": "bye bye"
-        }
-    ]
+  {
+    "first_const": "hello world",
+    "second": 500,
+    "third": "bye bye"
+  }
   ```
 ## Результаты тестирования
-![image](https://github.com/user-attachments/assets/70d47fb3-a6c5-4684-9e66-83fb623f2198)
-![image](https://github.com/user-attachments/assets/effca65a-da5e-4dfe-8705-4a0919084228)
-![image](https://github.com/user-attachments/assets/0bb20d14-5bf2-46b0-b92b-253513be6f5e)
-![image](https://github.com/user-attachments/assets/6ebc71e9-1f89-49b6-a0ef-a7a66e2bec9b)
-![image](https://github.com/user-attachments/assets/9876a18d-b23f-4ef7-8d3f-681483575a17)
-![image](https://github.com/user-attachments/assets/c7da9bcf-c518-47c8-bc83-585db2c313e7)
-![image](https://github.com/user-attachments/assets/2c834686-ad67-4090-b379-a3f37af04b5d)
-![image](https://github.com/user-attachments/assets/1f0c40ae-95cc-4d84-9607-2bd80eb8832a)
-![image](https://github.com/user-attachments/assets/1fd16bfa-d452-4268-bf89-59ef0ac77bc9)
-![image](https://github.com/user-attachments/assets/c35af375-ba25-4ec9-b195-503934659fd8)
-![image](https://github.com/user-attachments/assets/10188416-5e15-4cb8-a240-c533d93a96a6)
-![image](https://github.com/user-attachments/assets/021c281a-1316-4c7e-85b2-bd709fde4c55)
+![image](https://github.com/user-attachments/assets/9720c8d4-15f1-4c7f-9d34-aa8b79160bae)
+![image](https://github.com/user-attachments/assets/648aa557-1542-4b2f-8931-c8e4007c0527)
+![image](https://github.com/user-attachments/assets/77a8546c-6728-4eeb-9a0e-5c01130b234c)
+![image](https://github.com/user-attachments/assets/84de783c-122f-4edd-be32-0a9f005e1621)
+![image](https://github.com/user-attachments/assets/bf494e3f-ceb2-45b7-800a-3d0c88a3d5a0)
+![image](https://github.com/user-attachments/assets/9878136b-f7ba-4380-8ce6-b379593e034c)
+![image](https://github.com/user-attachments/assets/e4c73f31-6e1d-47d6-afae-9dd66ccb31dd)
+![image](https://github.com/user-attachments/assets/ce905353-a391-4c9b-afea-01f94e31fd36)
+![image](https://github.com/user-attachments/assets/e5bca38c-88e8-427a-8d11-62cf78f2104b)
+
