@@ -66,26 +66,19 @@ $(+ имя 1)
   REM Это пример с нахождением максимума 
   a: 40;
   b: 20;
-  max(a, b)
+  c: max(a, b);
   ```
 #### Результат работы программы:
   ```
   [
     {
-        "type": "int",
-        "name": "a",
-        "value": 40
+        "a": 40
     },
     {
-        "type": "int",
-        "name": "b",
-        "value": 20
+        "b": 20
     },
     {
-        "type": "max",
-        "a": 40,
-        "b": 20,
-        "result": 40
+        "c": 40
     }
   ]
   ```
@@ -106,32 +99,20 @@ $(+ имя 1)
   ```
   [
     {
-      "type": "dict",
-      "name": "slovar",
-      "values": [
+      "slovar": [
       {
-        "type": "str",
-        "name": "privet",
-        "value": "hello"
+        "privet": "hello"
       },
       {
-        "type": "int",
-        "name": "num",
-        "value": 100
+        "num": 100
       },
       {
-        "type": "dict",
-        "name": "dict_inside",
-        "values": [
+        "dict_inside": [
           {
-            "type": "str",
-            "name": "mir",
-            "value": "world"
+            "mir": "world"
           },
           {
-            "type": "int",
-            "name": "test",
-            "value": 123
+            "test": 123
           }
         ]
       }
@@ -150,19 +131,13 @@ $(+ имя 1)
   ```
   [
         {
-            "type": "str",
-            "name": "first_const",
-            "value": "hello world"
+            "first_const": "hello world"
         },
         {
-            "type": "int",
-            "name": "second",
-            "value": 500
+            "second": 500
         },
         {
-            "type": "str",
-            "name": "third",
-            "value": "bye bye"
+            "third": "bye bye"
         }
     ]
   ```
