@@ -1,6 +1,5 @@
 import json
 import sys
-
 from lark import Lark, Transformer, v_args, tree, LarkError, exceptions
 
 G = r'''
@@ -11,7 +10,7 @@ OPER: /["+"|"-"|"*"]/
 WS: /\s+|REM.*|<#[\s\S]*?#>/
 %ignore WS
 
-?val: NUM | STR | dict 
+?val: NUM | STR | dict | max
 
 assign: NAME "=" val
 
@@ -65,11 +64,22 @@ def execute(tree, inside_dict, json_output, variables):
                 raise LarkError(f"Константа {k} уже существует!")
             typ = type(v).__name__
             if not inside_dict:  # Проверяем, не находимся ли мы внутри словаря
-                variables[k] = v
-                json_output.append({"type": typ, "name": k, "value": v})
-                return {}
+                if typ != 'tuple':
+                    variables[k] = v
+                    json_output.append({f"{k}": v})
+                    return {}
+                else:
+                    c = execute(v, inside_dict, json_output, variables)
+                    variables[k] = c
+                    json_output.append({f"{k}": c})
             else:
-                return {"type": typ, "name": k, "value": v}
+                if typ != 'tuple':
+                    variables[k] = v
+                    return {f"{k}": v}
+                else:
+                    c = execute(v, inside_dict, json_output, variables)
+                    variables[k] = c
+                    return {f"{k}": c}
 
         case ('dict', name, assigns):
             if (name in variables):
@@ -115,12 +125,8 @@ def execute(tree, inside_dict, json_output, variables):
                 return {"type": "multiplication", "name": name, "new_value": variables[name]}
 
         case ('max', a, b):
-            if not inside_dict:
-                c = max(variables[a], variables[b])
-                json_output.append({"type": "max", a: variables[a], b: variables[b], "result": c})
-            else:
-                c = max(variables[a], variables[b])
-                return {"type": "max", a: variables[a], b: variables[b], "result": c}
+            c = max(variables[a], variables[b])
+            return c
 
 
 def parse(src):
